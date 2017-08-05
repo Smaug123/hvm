@@ -7,11 +7,16 @@
 //
 
 #include <stdio.h>
+#include <string.h>
 
 #include "hvm.h"
 
 int main(int argc, const char * argv[]) {
-    int initial_mem[3] = {105,13,98};
-    execute_program("10>0<<0:1+1-26*?0<1+0>055*-g0<p", initial_mem, 3);
+    /*
+     * Example program from www.hacker.org/hvm, should print out 945321
+     */
+    execute_program("123451^2v5:4?9p2g8pppppp",
+                    NULL,
+                    0);
     return 0;
 }

@@ -12,6 +12,10 @@
 
 #include "hvm.h"
 
+/*
+ * PRINT_BUFFER: the length of the buffer for an HVM print statement
+ */
+#define PRINT_BUFFER     50
 #define ERR_IS_OK        0
 #define ERR_PC_EOB       1
 #define ERR_UNKNOWN_INST 2
@@ -28,6 +32,7 @@
  * ERR_MEM: tried to access invalid memory location
  */
 #define ERR_MEM          6
+#define ERR_UNEXPECTED_OUTPUT 7
 #define ERR_OTHER        255
 
 #define MEMORY_SIZE 16384
@@ -58,9 +63,9 @@ size_t curr_allocated;
  *     IN  - number of values to copy from `initialise` into the program
  */
 void
-set_memory (int *initialise,
-            int *memory,
-            size_t n)
+set_memory (const int    *const initialise,
+                  int    *const memory,
+            size_t              n)
 {
     size_t i;
     
@@ -74,11 +79,23 @@ set_memory (int *initialise,
     }
 }
 
+/*
+ * pop
+ *
+ * Removes the top element of the input stack, and returns it in an out arg.
+ *
+ * Argument: output
+ *     OUT   - integer which was at the top of the stack
+ *
+ * Argument: stack
+ *     INOUT - stack to pop from.
+ *
+ * Returns: integer return code
+ */
 int
-pop (int* output,
-     int* stack)
+pop (int *const output,
+     int *const stack)
 {
-    // printf("Stack pop: ");
     int rc = ERR_IS_OK;
     
     if (stack_depth == 0) {
@@ -89,7 +106,6 @@ pop (int* output,
         *output = stack[stack_depth - 1];
         stack_depth -= 1;
     }
-    //printf("%i\n", *output);
     
     return (rc);
 }
@@ -98,11 +114,20 @@ pop (int* output,
  * delete
  *
  * Deletes the `index`th element of arr, and shifts all further elements left.
+ *
+ * Argument: arr
+ *     INOUT - array from which to delete an element
+ *
+ * Argument: index
+ *     IN    - index which will be deleted
+ *
+ * Argument: len
+ *     INOUT - length of arr
  */
 void
-delete (int    *arr,
-        size_t  index,
-        size_t *len)
+delete (int    *const arr,
+        size_t        index,
+        size_t *const len)
 {
     size_t i;
     
@@ -114,18 +139,25 @@ delete (int    *arr,
 }
 
 /*
+ * push
  *
+ * Pushes the given value to a stack.
+ *
+ * Argument: val
+ *     IN    - value to push to the stack
+ *
+ * Argument: stack
+ *     INOUT - stack to push to.
  */
 int
 push (int   val,
       int **stack)
 {
-    //printf("Stack push: %i\n", val);
     int rc = ERR_IS_OK;
 
     if (stack_depth >= curr_allocated) {
         /*
-         *
+         * More storage required for the stack, since it's full at the moment
          */
         *stack = realloc(*stack, 2*curr_allocated);
         if (*stack == NULL) {
@@ -164,18 +196,35 @@ int_leq_sizet (int a,
     return (result);
 }
 
-
+/*
+ * execute_program
+ *
+ * Executes a HVM program.
+ *
+ * Argument: program
+ *     IN    - string program to execute
+ *
+ * Argument: initial_mem
+ *     IN    - the HVM instance's memory. Only the first MEMORY_SIZE ints will
+ *             be considered; the rest will never be encountered by the HVM.
+ *             This is copied to an internal array. If there are not
+ *             MEMORY_SIZE entries in initial_mem, the internal memory will be
+ *             padded with zeros.
+ *
+ * Argument: mem_len
+ *     IN    - length of the initial memory array
+ */
 int
-execute_program (char *program,
-                 int  *initial_mem,
-                 int   mem_len)
+execute_program (const char *const program,
+                 const int  *const initial_mem,
+                 const int         mem_len)
 {
     int     program_counter = 0;
     size_t  end             = strlen(program);
     bool    done            = false;
     int     rc              = 0;
     int     s0;   /* variable into which we pop from stack */
-    int     s1; /* variable into which we pop from stack */
+    int     s1;   /* variable into which we pop from stack */
     int     val_to_push;
     int    *stack;
     int     memory[MEMORY_SIZE]; /* HVM interpreted program's memory buffer */

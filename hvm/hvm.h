@@ -12,8 +12,8 @@
 #include <stdio.h>
 
 int
-execute_program (char *program,
-                 int  *initial_mem,
-                 int   mem_len);
+execute_program (const char *const program,
+                 const int  *const initial_mem,
+                 const int         mem_len);
 
 #endif /* hvm_h */
