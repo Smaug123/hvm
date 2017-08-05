@@ -49,7 +49,8 @@ validate_intlist (const char *const intlist,
 
     size_t num_memory = 0;
     size_t len = strlen(intlist);
-    for (size_t i = 0; i < len; i++) {
+    size_t i;
+    for (i = 0; i < len; i++) {
         if (intlist[i] == ',') {
             num_memory++;
         } else if (!is_digit(intlist[i]) && intlist[i] != '-') {
