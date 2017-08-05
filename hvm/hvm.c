@@ -68,12 +68,12 @@ set_memory (const int    *const initialise,
             size_t              n)
 {
     size_t i;
-    
+
     if (n > MEMORY_SIZE) {
         n = MEMORY_SIZE;
     }
     memcpy(memory, initialise, n * sizeof(int));
-    
+
     for (i = n; i < MEMORY_SIZE; i++) {
         memory[i] = 0;
     }
@@ -97,16 +97,16 @@ pop (int *const output,
      int *const stack)
 {
     int rc = ERR_IS_OK;
-    
+
     if (stack_depth == 0) {
         rc = ERR_EMPTY_STACK;
     }
-    
+
     if (rc == ERR_IS_OK) {
         *output = stack[stack_depth - 1];
         stack_depth -= 1;
     }
-    
+
     return (rc);
 }
 
@@ -130,11 +130,11 @@ delete (int    *const arr,
         size_t *const len)
 {
     size_t i;
-    
+
     for (i = index; i < *len; i++) {
         arr[i] = arr[i+1];
     }
-    
+
     *len -= 1;
 }
 
@@ -163,16 +163,16 @@ push (int   val,
         if (*stack == NULL) {
             rc = ERR_OTHER;
         }
-        
+
         if (rc == ERR_IS_OK) {
             curr_allocated *= 2;
         }
     }
-    
+
     if (rc == ERR_IS_OK) {
         (*stack)[stack_depth] = val;
         stack_depth++;
-        
+
     }
 
     return (rc);
@@ -192,7 +192,25 @@ int_leq_sizet (int a,
     } else {
         result = false;
     }
-    
+
+    return (result);
+}
+
+/*
+ * Returns true iff the specified int is >= the size_t.
+ */
+bool
+int_geq_sizet (int a,
+               size_t b)
+{
+    bool result;
+
+    if (a < 0) {
+        result = false;
+    } else if ((size_t)(a) >= b) {
+        result = true;
+    }
+
     return (result);
 }
 
@@ -228,7 +246,7 @@ execute_program (const char *const program,
     int     val_to_push;
     int    *stack;
     int     memory[MEMORY_SIZE]; /* HVM interpreted program's memory buffer */
-    
+
     /*
      * A stack of depth 32 is a reasonable start.
      */
@@ -237,9 +255,9 @@ execute_program (const char *const program,
     if (stack == NULL) {
         rc = ERR_OTHER;
     }
-    
+
     set_memory(initial_mem, memory, mem_len);
-    
+
     /*
      * The result of program_counter < end
      */
@@ -253,7 +271,7 @@ execute_program (const char *const program,
              */
             rc = ERR_PC_EOB;
         }
-        
+
         if (rc == ERR_IS_OK) {
             switch (program[program_counter]) {
                 case ' ':
@@ -406,7 +424,7 @@ execute_program (const char *const program,
                 case '^':
                     rc = pop(&s0, stack);
                     if (rc == ERR_IS_OK) {
-                        if (s0 < 0 || s0 >= stack_depth) {
+                        if (s0 < 0 || int_geq_sizet(s0, stack_depth)) {
                             rc = ERR_STACK;
                         }
                     }
@@ -418,7 +436,7 @@ execute_program (const char *const program,
                 case 'v':
                     rc = pop(&s0, stack);
                     if (rc == ERR_IS_OK) {
-                        if (s0 < 0 || s0 >= stack_depth) {
+                        if (s0 < 0 || int_geq_sizet(s0, stack_depth)) {
                             rc = ERR_STACK;
                         }
                     }
@@ -443,8 +461,8 @@ execute_program (const char *const program,
             }
         }
     }
-                   
+
     free(stack);
-    
+
     return (rc);
 }
