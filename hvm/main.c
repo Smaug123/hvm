@@ -49,7 +49,8 @@ validate_intlist (const char *const intlist,
 
     size_t num_memory = 0;
     size_t len = strlen(intlist);
-    for (size_t i = 0; i < len; i++) {
+    size_t i;
+    for (i = 0; i < len; i++) {
         if (intlist[i] == ',') {
             num_memory++;
         } else if (!is_digit(intlist[i]) && intlist[i] != '-') {
@@ -79,7 +80,8 @@ validate_intlist (const char *const intlist,
  */
 bool
 is_integer (const char *const string) {
-    size_t len = strlen(string);
+    const size_t len = strlen(string);
+    size_t i; /* generic iterator variable */
 
     if (len == 0) {
         return false;
@@ -87,7 +89,7 @@ is_integer (const char *const string) {
     if (string[0] != '-' && !is_digit(string[0])) {
         return false;
     }
-    for (size_t i = 1; i < len; i++) {
+    for (i = 1; i < len; i++) {
         if (!is_digit(string[i])) {
             return false;
         }
