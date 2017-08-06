@@ -159,7 +159,7 @@ push (int   val,
         /*
          * More storage required for the stack, since it's full at the moment
          */
-        *stack = realloc(*stack, 2*curr_allocated);
+        *stack = realloc(*stack, 2*curr_allocated*sizeof(int));
         if (*stack == NULL) {
             rc = ERR_OTHER;
         }
@@ -172,7 +172,6 @@ push (int   val,
     if (rc == ERR_IS_OK) {
         (*stack)[stack_depth] = val;
         stack_depth++;
-
     }
 
     return (rc);
@@ -209,6 +208,11 @@ int_geq_sizet (int a,
         result = false;
     } else if ((size_t)(a) >= b) {
         result = true;
+    } else {
+        /*
+         * a and b are nonnegative and a < b
+         */
+        result = false;
     }
 
     return (result);
