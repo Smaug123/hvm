@@ -101,6 +101,9 @@ is_integer (const char *const string) {
 int
 main (int   argc,
       char *argv[]) {
+
+    int rc = 0;
+
     if (argc == 1 || argc > 3) {
         /*
          * Wrong number of arguments; print usage message
@@ -113,7 +116,7 @@ main (int   argc,
     int *initial_memory = NULL;
     size_t memory_length = 0; /* number of memory integers passed in */
 
-    if (argc >= 2 && strlen(argv[2]) > 0) {
+    if (argc >= 3 && strlen(argv[2]) > 0) {
         /*
          * We were passed in a list of memory locations; parse it
          */
@@ -143,10 +146,10 @@ main (int   argc,
         }
     }
 
-    execute_program(program,
-                    initial_memory,
-                    memory_length);
+    rc = execute_program(program,
+                         initial_memory,
+                         memory_length);
 
     free(initial_memory);
-    return 0;
+    return (rc);
 }

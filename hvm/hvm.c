@@ -219,6 +219,44 @@ int_geq_sizet (int a,
 }
 
 /*
+ * initialise_stack
+ *
+ * Initialises an array which is to be used as a stack.
+ *
+ * Argument: stack
+ *    OUT  - pointer to an array
+ *
+ * Argument: curr_allocated
+ *    OUT  - number of allocated entries in the array
+ */
+int
+initialise_stack (int    **stack,
+                  size_t  *curr_allocated)
+{
+    int rc = ERR_IS_OK;
+    *curr_allocated = 32;
+    *stack = malloc(*curr_allocated * sizeof(int));
+    if (*stack == NULL) {
+        rc = ERR_OTHER;
+    }
+
+    return rc;
+}
+
+/*
+ * free_stack
+ *
+ * Frees an array which is being used as a stack.
+ *
+ * Argument: stack
+ *    OUT  - pointer to the array which is to be freed.
+ */
+void
+free_stack (int **stack) {
+    free(*stack);
+}
+
+/*
  * execute_program
  *
  * Executes a HVM program.
@@ -248,19 +286,18 @@ execute_program (const char *const program,
     int     s0;   /* variable into which we pop from stack */
     int     s1;   /* variable into which we pop from stack */
     int     val_to_push;
+    int     call_stack_loc; /* temporary variable for things popped from call stack */
     int    *stack;
+    int    *call_stack; /* call stack for the program */
+    size_t  call_stack_size; /* number of ints there is space for in call stack */
     int     memory[MEMORY_SIZE]; /* HVM interpreted program's memory buffer */
 
-    /*
-     * A stack of depth 32 is a reasonable start.
-     */
-    curr_allocated = 32;
-    stack = malloc(curr_allocated * sizeof(int));
-    if (stack == NULL) {
-        rc = ERR_OTHER;
-    }
+    rc = initialise_stack(&stack, &curr_allocated);
+    if (rc == ERR_IS_OK) {
+        set_memory(initial_mem, memory, mem_len);
 
-    set_memory(initial_mem, memory, mem_len);
+        rc = initialise_stack(&call_stack, &call_stack_size);
+    }
 
     /*
      * The result of program_counter < end
@@ -397,8 +434,21 @@ execute_program (const char *const program,
                     }
                     break;
                 case 'c':
+                    rc = pop(&s0, stack);
+                    if (rc == ERR_IS_OK) {
+                        /*
+                         * Push current program counter onto call stack
+                         */
+                        rc = push(program_counter, &call_stack);
+                        program_counter = s0;
+                        program_counter--;
+                    }
                     break;
                 case '$':
+                    rc = pop(&call_stack_loc, call_stack);
+                    if (rc == ERR_IS_OK) {
+                        program_counter = call_stack_loc;
+                    }
                     break;
                 case '<':
                     rc = pop(&s0, stack);
@@ -466,7 +516,8 @@ execute_program (const char *const program,
         }
     }
 
-    free(stack);
+    free_stack(&call_stack);
+    free_stack(&stack);
 
     return (rc);
 }
